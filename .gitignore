@@ -1,0 +1,9 @@
+# Virtual Rnvironment
+env/
+
+# Python bytecode cache 
+__pycache__/
+*.pyc
+
+# Local database
+db.sqlite3

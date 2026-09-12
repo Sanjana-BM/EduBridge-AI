@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - EduBridge AI{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-pink-700 flex items-center justify-center py-12 px-4">
+    <div class="max-w-md w-full space-y-8 bg-white rounded-2xl shadow-2xl p-8">
+        <div class="text-center">
+            <a href="{% url 'index' %}" class="inline-flex items-center text-purple-600 hover:text-purple-700 mb-4">
+                <i class="fas fa-arrow-left mr-2"></i> Back to Home
+            </a>
+            <i class="fas fa-graduation-cap text-5xl text-purple-600 mb-4"></i>
+            <h2 class="text-3xl font-bold text-gray-900">Welcome Back</h2>
+            <p class="text-gray-600 mt-2">Sign in to your EduBridge AI account</p>
+        </div>
+        
+        {% if messages %}
+        <div class="space-y-2">
+            {% for message in messages %}
+            <div class="{% if message.tags == 'error' %}bg-red-100 border-red-400 text-red-700{% else %}bg-blue-100 border-blue-400 text-blue-700{% endif %} border px-4 py-3 rounded-lg" role="alert">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <!-- Teacher Login -->
+        <div class="border-l-4 border-purple-500 bg-purple-50 p-4 rounded-lg">
+            <h3 class="text-lg font-semibold text-purple-800 mb-3 flex items-center">
+                <i class="fas fa-chalkboard-teacher mr-2"></i>
+                Teacher Login
+            </h3>
+            <form method="post" class="space-y-3">
+                {% csrf_token %}
+                <input type="hidden" name="user_type" value="teacher">
+                {% if request.GET.next %}
+                <input type="hidden" name="next" value="{{ request.GET.next }}">
+                {% endif %}
+                
+                <div>
+                    <input type="text" name="username" placeholder="Teacher Username" required 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-800">
+                </div>
+                <div>
+                    <input type="password" name="password" placeholder="Password" required 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-800">
+                </div>
+                <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors">
+                    <i class="fas fa-sign-in-alt mr-2"></i>Login as Teacher
+                </button>
+            </form>
+        </div>
+
+        <!-- Student Login -->
+        <div class="border-l-4 border-green-500 bg-green-50 p-4 rounded-lg">
+            <h3 class="text-lg font-semibold text-green-800 mb-3 flex items-center">
+                <i class="fas fa-user-graduate mr-2"></i>
+                Student Login
+            </h3>
+            <form method="post" class="space-y-3">
+                {% csrf_token %}
+                <input type="hidden" name="user_type" value="student">
+                {% if request.GET.next %}
+                <input type="hidden" name="next" value="{{ request.GET.next }}">
+                {% endif %}
+                
+                <div>
+                    <input type="text" name="username" placeholder="Student Username" required 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-800">
+                </div>
+                <div>
+                    <input type="password" name="password" placeholder="Password" required 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-800">
+                </div>
+                <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors">
+                    <i class="fas fa-sign-in-alt mr-2"></i>Login as Student
+                </button>
+            </form>
+        </div>
+
+        <div class="text-center pt-4 border-t border-gray-200">
+            <p class="text-gray-600">
+                Don't have an account? 
+                <a href="{% url 'student_register' %}" class="text-purple-600 hover:text-purple-700 font-semibold">
+                    Student Sign Up
+                </a>
+            </p>
+            <p class="text-xs text-gray-500 mt-2">
+                Teacher accounts are created by administrators
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,1444 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Dashboard{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-pink-700 text-white">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Welcome Header -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-6">
+            <h1 class="text-3xl font-bold mb-2">Welcome, {{ student_profile.user.first_name }}!</h1>
+            <p class="text-gray-300">Class: {{ student_profile.class_enrolled }} | Roll No: {{ student_profile.roll_number }}</p>
+        </div>
+        
+        <!-- Quick Actions Grid -->
+        <div class="grid md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-purple-600/50 backdrop-blur-lg p-6 rounded-xl text-center hover:scale-105 transition-transform cursor-pointer" onclick="scrollToChat()">
+                <i class="fas fa-robot text-3xl mb-3"></i>
+                <h3 class="font-semibold text-lg mb-2">AI Tutor</h3>
+                <p class="text-purple-200 text-sm">Get instant help with your questions</p>
+            </div>
+            <div class="bg-blue-600/50 backdrop-blur-lg p-6 rounded-xl text-center hover:scale-105 transition-transform cursor-pointer" onclick="scrollToFAQ()">
+                <i class="fas fa-question-circle text-3xl mb-3"></i>
+                <h3 class="font-semibold text-lg mb-2">FAQs</h3>
+                <p class="text-blue-200 text-sm">Browse common questions & answers</p>
+            </div>
+            <div class="bg-green-600/50 backdrop-blur-lg p-6 rounded-xl text-center hover:scale-105 transition-transform cursor-pointer" onclick="scrollToMaterials()">
+                <i class="fas fa-book text-3xl mb-3"></i>
+                <h3 class="font-semibold text-lg mb-2">Study Materials</h3>
+                <p class="text-green-200 text-sm">Access your learning resources</p>
+            </div>
+        </div>
+
+        <!-- Subjects Grid -->
+        <div class="grid md:grid-cols-4 gap-6 mb-8">
+            {% for subject in subjects %}
+            <div class="bg-purple-600/50 backdrop-blur-lg p-6 rounded-xl text-center hover:scale-105 transition-transform">
+                <i class="fas fa-book text-3xl mb-3"></i>
+                <h3 class="font-semibold text-lg">{{ subject.name }}</h3>
+                <p class="text-purple-200 text-sm mt-1">{{ subject.code }}</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Study Materials Section -->
+        <div id="materials-section" class="bg-white rounded-2xl shadow-2xl overflow-hidden mb-8">
+            <div class="bg-gradient-to-r from-green-600 to-blue-600 p-6">
+                <h2 class="text-2xl font-bold">📚 Study Materials</h2>
+                <p class="text-green-200">Access learning resources for your subjects</p>
+            </div>
+            
+            <div class="p-6 bg-gray-50">
+                <!-- Materials Search and Filters -->
+                <div class="mb-6 flex flex-col md:flex-row gap-4">
+                    <div class="flex-1 relative">
+                        <input type="text" id="materials-search" placeholder="Search study materials..." 
+                               class="w-full p-3 pl-10 border border-gray-300 rounded-lg text-gray-800 focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                    <select id="materials-subject-filter" class="p-3 border border-gray-300 rounded-lg text-gray-800 focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        <option value="">All Subjects</option>
+                        {% for subject in subjects %}
+                        <option value="{{ subject.name }}">{{ subject.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <select id="materials-type-filter" class="p-3 border border-gray-300 rounded-lg text-gray-800 focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        <option value="">All Types</option>
+                        <option value="pdf">PDF</option>
+                        <option value="video">Video</option>
+                        <option value="link">Link</option>
+                        <option value="document">Document</option>
+                    </select>
+                </div>
+                
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" id="materials-container">
+                    <!-- Study materials will be loaded here -->
+                    <div class="text-center py-8 col-span-3">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+                        <p class="text-gray-600">Loading study materials...</p>
+                    </div>
+                </div>
+                
+                <div class="mt-6 text-center">
+                    <button onclick="loadMoreMaterials()" id="load-more-materials" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors hidden">
+                        <i class="fas fa-sync-alt mr-2"></i>Load More Materials
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- FAQ Section -->
+        <div id="faq-section" class="bg-white rounded-2xl shadow-2xl overflow-hidden mb-8">
+            <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-6">
+                <h2 class="text-2xl font-bold">❓ Frequently Asked Questions</h2>
+                <p class="text-blue-200">Quick answers to common questions from your teachers</p>
+            </div>
+            
+            <div class="p-6 bg-gray-50">
+                <!-- FAQ Search and Filters -->
+                <div class="mb-6 flex flex-col md:flex-row gap-4">
+                    <div class="flex-1 relative">
+                        <input type="text" id="faq-search" placeholder="Search FAQs..." 
+                               class="w-full p-3 pl-10 border border-gray-300 rounded-lg text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                    <select id="faq-subject-filter" class="p-3 border border-gray-300 rounded-lg text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Subjects</option>
+                        {% for subject in subjects %}
+                        <option value="{{ subject.name }}">{{ subject.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-6" id="faq-container">
+                    <!-- FAQ items will be loaded here -->
+                    <div class="text-center py-8 col-span-2">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <p class="text-gray-600">Loading FAQs...</p>
+                    </div>
+                </div>
+                
+                <div class="mt-6 text-center">
+                    <button onclick="loadMoreFAQs()" id="load-more-faqs" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors hidden">
+                        <i class="fas fa-sync-alt mr-2"></i>Load More FAQs
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Chat Interface -->
+        <div id="chat-section" class="bg-white rounded-2xl shadow-2xl overflow-hidden mb-8">
+            <div class="bg-gradient-to-r from-purple-600 to-pink-600 p-6">
+                <h2 class="text-2xl font-bold">🤖 AI Learning Assistant</h2>
+                <p class="text-purple-200">Ask me anything about your subjects! I'll help you using your teachers' materials.</p>
+            </div>
+            
+            <!-- Chat Messages -->
+            <div id="chat-messages" class="h-96 overflow-y-auto p-6 bg-gray-50 space-y-4">
+                <div class="flex justify-start">
+                    <div class="flex items-start space-x-3 max-w-xs md:max-w-2xl">
+                        <div class="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-robot text-white text-sm"></i>
+                        </div>
+                        <div class="bg-white border border-gray-200 rounded-2xl rounded-tl-none p-4 shadow-sm">
+                            <p class="text-gray-800">Hello! I'm your AI tutor. Ask me anything about your subjects and I'll help you learn using your teachers' study materials! 📚</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Chat Input -->
+            <div class="border-t border-gray-200 p-6 bg-white">
+                <div class="flex gap-3">
+                    <input type="text" id="user-input" placeholder="Ask about Math, Science, English..." 
+                           class="flex-1 p-4 border border-gray-300 rounded-xl text-gray-800 focus:ring-2 focus:ring-purple-500 focus:border-transparent text-lg"
+                           onkeypress="handleKeyPress(event)">
+                    <button onclick="sendMessage()" id="send-button" class="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-xl font-semibold transition-colors">
+                        <i class="fas fa-paper-plane mr-2"></i>Send
+                    </button>
+                </div>
+                
+                <!-- Quick Questions -->
+                <div class="mt-4 flex flex-wrap gap-2">
+                    <span class="text-gray-600 text-sm">Try asking:</span>
+                    <button onclick="setExample('What is a mathematical statement?')" class="text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded-lg transition-colors">
+                        What is a mathematical statement?
+                    </button>
+                    <button onclick="setExample('Are all integers rational numbers?')" class="text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded-lg transition-colors">
+                        Are all integers rational?
+                    </button>
+                    <button onclick="setExample('Explain triangle properties')" class="text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded-lg transition-colors">
+                        Triangle properties
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Response Info -->
+        <div id="response-info" class="mt-4 text-sm bg-white/10 backdrop-blur-lg rounded-lg p-4 hidden">
+            <div class="flex justify-between items-center">
+                <span id="subject-info" class="font-semibold"></span>
+                <span id="confidence-info" class="bg-green-500 text-white px-3 py-1 rounded-full text-xs"></span>
+            </div>
+        </div>
+
+        <!-- Recent Chats -->
+        {% if recent_chats %}
+        <div class="mt-8 bg-white/10 backdrop-blur-lg rounded-2xl p-6">
+            <h3 class="text-xl font-bold mb-4">Recent Conversations</h3>
+            <div class="space-y-3">
+                {% for chat in recent_chats %}
+                <div class="bg-white/5 p-4 rounded-lg hover:bg-white/10 transition-colors cursor-pointer" onclick="loadChatHistory('{{ chat.question }}')">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <p class="text-gray-300 text-sm mb-1">
+                                <strong>Q:</strong> {{ chat.question|truncatewords:10 }}
+                            </p>
+                            <p class="text-gray-400 text-xs">
+                                <strong>A:</strong> {{ chat.answer|truncatewords:15 }}
+                            </p>
+                        </div>
+                        <div class="text-right text-xs text-gray-400">
+                            <div>{{ chat.subject.name|default:"General" }}</div>
+                            <div>{{ chat.created_at|date:"M d, H:i" }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Global variables
+let currentFAQPage = 1;
+let currentMaterialsPage = 1;
+const itemsPerPage = 6;
+let allFAQs = [];
+let allMaterials = [];
+let filteredFAQs = [];
+let filteredMaterials = [];
+
+// Navigation functions with safety checks
+function scrollToChat() {
+    const chatSection = document.getElementById('chat-section');
+    if (chatSection) {
+        chatSection.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+function scrollToFAQ() {
+    const faqSection = document.getElementById('faq-section');
+    if (faqSection) {
+        faqSection.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+function scrollToMaterials() {
+    const materialsSection = document.getElementById('materials-section');
+    if (materialsSection) {
+        materialsSection.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+// Initialize everything when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Only initialize sections that exist on the page
+    if (document.getElementById('faq-container')) {
+        loadFAQs();
+        setupFAQSearch();
+    }
+    
+    if (document.getElementById('materials-container')) {
+        loadStudyMaterials();
+        setupMaterialsSearch();
+    }
+});
+
+// Study Materials Management
+function setupMaterialsSearch() {
+    const searchInput = document.getElementById('materials-search');
+    const subjectFilter = document.getElementById('materials-subject-filter');
+    const typeFilter = document.getElementById('materials-type-filter');
+    
+    // Check if elements exist
+    if (!searchInput || !subjectFilter || !typeFilter) {
+        return;
+    }
+    
+    let searchTimeout;
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            filterMaterials();
+        }, 300);
+    });
+    
+    subjectFilter.addEventListener('change', filterMaterials);
+    typeFilter.addEventListener('change', filterMaterials);
+}
+
+function filterMaterials() {
+    const searchInput = document.getElementById('materials-search');
+    const subjectFilter = document.getElementById('materials-subject-filter');
+    const typeFilter = document.getElementById('materials-type-filter');
+    
+    if (!searchInput || !subjectFilter || !typeFilter) {
+        return;
+    }
+    
+    const searchTerm = searchInput.value.toLowerCase();
+    const subjectValue = subjectFilter.value;
+    const typeValue = typeFilter.value;
+    
+    filteredMaterials = allMaterials.filter(material => {
+        const matchesSearch = !searchTerm || 
+            material.title.toLowerCase().includes(searchTerm) ||
+            (material.description && material.description.toLowerCase().includes(searchTerm));
+        
+        const matchesSubject = !subjectValue || material.subject === subjectValue;
+        const matchesType = !typeValue || material.file_type === typeValue;
+        
+        return matchesSearch && matchesSubject && matchesType;
+    });
+    
+    displayFilteredMaterials();
+}
+
+function displayFilteredMaterials() {
+    const materialsContainer = document.getElementById('materials-container');
+    const loadMoreButton = document.getElementById('load-more-materials');
+    
+    if (!materialsContainer) return;
+    
+    if (filteredMaterials.length === 0) {
+        materialsContainer.innerHTML = `
+            <div class="col-span-3 text-center py-8">
+                <i class="fas fa-search text-4xl text-gray-400 mb-3"></i>
+                <p class="text-gray-600">No study materials match your search criteria.</p>
+                <p class="text-gray-500 text-sm mt-2">Try adjusting your search terms or filters.</p>
+                <button onclick="clearMaterialsFilters()" class="mt-4 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm">
+                    <i class="fas fa-times mr-2"></i>Clear Filters
+                </button>
+            </div>
+        `;
+        if (loadMoreButton) loadMoreButton.classList.add('hidden');
+        return;
+    }
+    
+    materialsContainer.innerHTML = '';
+    filteredMaterials.forEach(material => {
+        const materialElement = createMaterialElement(material);
+        materialsContainer.appendChild(materialElement);
+    });
+    
+    if (loadMoreButton) loadMoreButton.classList.add('hidden');
+}
+
+function clearMaterialsFilters() {
+    const searchInput = document.getElementById('materials-search');
+    const subjectFilter = document.getElementById('materials-subject-filter');
+    const typeFilter = document.getElementById('materials-type-filter');
+    
+    if (searchInput) searchInput.value = '';
+    if (subjectFilter) subjectFilter.value = '';
+    if (typeFilter) typeFilter.value = '';
+    
+    filteredMaterials = [...allMaterials];
+    displayFilteredMaterials();
+}
+
+async function loadStudyMaterials(page = 1) {
+    const materialsContainer = document.getElementById('materials-container');
+    const loadMoreButton = document.getElementById('load-more-materials');
+    
+    // Check if materials elements exist
+    if (!materialsContainer) {
+        console.log('Materials container not found on this page');
+        return;
+    }
+    
+    try {
+        if (page === 1) {
+            materialsContainer.innerHTML = `
+                <div class="col-span-3 text-center py-8">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+                    <p class="text-gray-600">Loading study materials...</p>
+                </div>
+            `;
+        }
+
+        const response = await fetch(`/api/study-materials/?page=${page}&limit=${itemsPerPage}`, {
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            credentials: 'same-origin'
+        });
+        
+        if (response.status === 403) {
+            throw new Error('Access denied. Please make sure you are logged in as a student.');
+        }
+        
+        if (response.status === 404) {
+            throw new Error('Student profile not found. Please contact administrator.');
+        }
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `Failed to load study materials: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (page === 1) {
+            materialsContainer.innerHTML = '';
+            allMaterials = [];
+        }
+        
+        if (data.materials && data.materials.length > 0) {
+            allMaterials.push(...data.materials);
+            filteredMaterials = [...allMaterials];
+            displayFilteredMaterials();
+            
+            if (data.has_more && loadMoreButton) {
+                loadMoreButton.classList.remove('hidden');
+                currentMaterialsPage = page;
+            } else if (loadMoreButton) {
+                loadMoreButton.classList.add('hidden');
+            }
+        } else {
+            if (page === 1) {
+                materialsContainer.innerHTML = `
+                    <div class="col-span-3 text-center py-8">
+                        <i class="fas fa-inbox text-4xl text-gray-400 mb-3"></i>
+                        <p class="text-gray-600">No study materials available yet.</p>
+                        <p class="text-gray-500 text-sm mt-2">Your teachers will upload materials soon!</p>
+                        <button onclick="loadStudyMaterials(1)" class="mt-4 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm">
+                            <i class="fas fa-sync-alt mr-2"></i>Refresh
+                        </button>
+                    </div>
+                `;
+            } else if (loadMoreButton) {
+                loadMoreButton.classList.add('hidden');
+            }
+        }
+    } catch (error) {
+        console.error('Error loading study materials:', error);
+        if (materialsContainer) {
+            materialsContainer.innerHTML = `
+                <div class="col-span-3 text-center py-8">
+                    <i class="fas fa-exclamation-triangle text-4xl text-red-400 mb-3"></i>
+                    <p class="text-red-600 font-semibold mb-2">Failed to load study materials</p>
+                    <p class="text-gray-600 text-sm mb-4">${error.message}</p>
+                    <button onclick="loadStudyMaterials(1)" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm">
+                        <i class="fas fa-redo mr-2"></i>Try Again
+                    </button>
+                </div>
+            `;
+        }
+    }
+}
+
+function loadMoreMaterials() {
+    loadStudyMaterials(currentMaterialsPage + 1);
+}
+
+function createMaterialElement(material) {
+    const materialDiv = document.createElement('div');
+    materialDiv.className = 'bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow';
+    
+    const fileIcon = getFileIcon(material.file_type);
+    const fileSize = material.file_size ? ` • ${formatFileSize(material.file_size)}` : '';
+    
+    // Escape any special characters in the title and description
+    const safeTitle = material.title.replace(/'/g, "\\'");
+    const safeDescription = (material.description || 'No description available').replace(/'/g, "\\'");
+    
+    materialDiv.innerHTML = `
+        <div class="flex items-start space-x-3">
+            <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <i class="${fileIcon} text-white text-lg"></i>
+            </div>
+            <div class="flex-1">
+                <h4 class="font-semibold text-gray-800 mb-1 text-sm leading-tight">${material.title}</h4>
+                <p class="text-gray-600 text-xs mb-2">${material.description || 'No description available'}</p>
+                <div class="flex justify-between items-center mt-3">
+                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                        ${material.subject}
+                    </span>
+                    <span class="text-gray-500 text-xs">
+                        ${material.file_type.toUpperCase()}${fileSize}
+                    </span>
+                </div>
+                <div class="mt-3 flex gap-2">
+                    <button onclick="downloadMaterial('${material.id}', '${safeTitle}')" 
+                            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs py-2 px-3 rounded-lg transition-colors">
+                        <i class="fas fa-download mr-1"></i>Download
+                    </button>
+                    <button onclick="viewMaterial('${material.id}')" 
+                            class="flex-1 bg-gray-600 hover:bg-gray-700 text-white text-xs py-2 px-3 rounded-lg transition-colors">
+                        <i class="fas fa-eye mr-1"></i>View
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    return materialDiv;
+}
+
+function getFileIcon(fileType) {
+    const icons = {
+        'pdf': 'fas fa-file-pdf',
+        'video': 'fas fa-file-video',
+        'link': 'fas fa-link',
+        'document': 'fas fa-file-word',
+        'notes': 'fas fa-file-alt',
+        'assignment': 'fas fa-tasks',
+        'quiz': 'fas fa-question-circle',
+        'formula': 'fas fa-square-root-alt',
+        'example': 'fas fa-code',
+        'theory': 'fas fa-graduation-cap',
+        'default': 'fas fa-file'
+    };
+    return icons[fileType] || icons.default;
+}
+
+function formatFileSize(bytes) {
+    if (!bytes) return '';
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+}
+
+function downloadMaterial(materialId, title) {
+    window.open(`/api/study-materials/${materialId}/download/`, '_blank');
+}
+
+function viewMaterial(materialId) {
+    // Show loading state
+    const modalHtml = `
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" id="material-modal">
+            <div class="bg-white rounded-2xl p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold text-gray-800">Loading Material...</h3>
+                    <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700 transition-colors">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+                <div class="text-center py-8">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p class="text-gray-600">Loading study material details...</p>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if any
+    const existingModal = document.getElementById('material-modal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add new modal
+    const modalDiv = document.createElement('div');
+    modalDiv.id = 'material-modal';
+    modalDiv.innerHTML = modalHtml;
+    document.body.appendChild(modalDiv);
+
+    // Fetch material details
+    fetch(`/api/study-materials/${materialId}/view/`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to load material');
+            }
+            return response.json();
+        })
+        .then(material => {
+            showMaterialModal(material);
+        })
+        .catch(error => {
+            console.error('Error viewing material:', error);
+            showErrorModal('Failed to load material details. Please try again.');
+        });
+}
+
+function showMaterialModal(material) {
+    const fileIcon = getFileIcon(material.file_type);
+    
+    // Format content with proper line breaks and structure
+    const formattedContent = formatMaterialContent(material.content);
+    
+    // Escape any special characters for safe HTML insertion
+    const safeTitle = material.title.replace(/"/g, '&quot;');
+    const safeDescription = (material.description || 'No description available').replace(/"/g, '&quot;');
+    const safeTeacher = (material.teacher || 'Not specified').replace(/"/g, '&quot;');
+    const safeFileUrl = material.file_url ? material.file_url.replace(/"/g, '&quot;') : '';
+    
+    const modalHtml = `
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" id="material-modal">
+            <div class="bg-white rounded-2xl p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                <!-- Header -->
+                <div class="flex justify-between items-start mb-6">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
+                                <i class="${fileIcon} text-white text-lg"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-2xl font-bold text-gray-800">${material.title}</h3>
+                                <p class="text-gray-600">${material.description || 'No description available'}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700 transition-colors ml-4">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+
+                <!-- Metadata -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+                    <div>
+                        <p class="text-sm text-gray-600 font-semibold">Subject</p>
+                        <p class="text-gray-800 font-medium">${material.subject}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600 font-semibold">Teacher</p>
+                        <p class="text-gray-800">${material.teacher || 'Not specified'}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600 font-semibold">Type</p>
+                        <p class="text-gray-800 capitalize">${material.file_type}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600 font-semibold">Created</p>
+                        <p class="text-gray-800">${material.created_at}</p>
+                    </div>
+                </div>
+
+                <!-- Keywords -->
+                ${material.keywords && material.keywords.length > 0 ? `
+                <div class="mb-6">
+                    <p class="text-sm text-gray-600 font-semibold mb-2">Keywords</p>
+                    <div class="flex flex-wrap gap-2">
+                        ${material.keywords.map(keyword => 
+                            `<span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">${keyword.trim().replace(/"/g, '&quot;')}</span>`
+                        ).join('')}
+                    </div>
+                </div>
+                ` : ''}
+
+                <!-- Content -->
+                ${material.content ? `
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <p class="text-lg font-semibold text-gray-800">Content</p>
+                        <span class="text-sm text-gray-500">${getContentStats(material.content)}</span>
+                    </div>
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-6 max-h-96 overflow-y-auto">
+                        <div class="prose prose-blue max-w-none">
+                            ${formattedContent}
+                        </div>
+                    </div>
+                </div>
+                ` : ''}
+
+                <!-- Actions -->
+                <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
+                    ${material.file_url ? `
+                    <button onclick="window.open('${safeFileUrl}', '_blank')" 
+                            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-semibold transition-all transform hover:scale-105 flex items-center justify-center gap-2">
+                        <i class="fas fa-external-link-alt"></i>
+                        ${material.file_url.startsWith('http') ? 'Open Link' : 'View File'}
+                    </button>
+                    ` : ''}
+                    
+                    <button onclick="downloadMaterial('${material.id}', '${safeTitle}')" 
+                            class="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg font-semibold transition-all transform hover:scale-105 flex items-center justify-center gap-2">
+                        <i class="fas fa-download"></i>
+                        Download
+                    </button>
+                    
+                    <button onclick="closeModal()" 
+                            class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3 px-6 rounded-lg font-semibold transition-all transform hover:scale-105 flex items-center justify-center gap-2">
+                        <i class="fas fa-times"></i>
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Update modal content
+    const modal = document.getElementById('material-modal');
+    if (modal) {
+        modal.innerHTML = modalHtml;
+    }
+}
+
+// Helper functions for material modal
+function formatMaterialContent(content) {
+    if (!content) return '<p class="text-gray-500 italic">No content available</p>';
+    
+    // Replace line breaks with <br> and paragraphs
+    let formatted = content
+        .replace(/\r\n/g, '\n')
+        .replace(/\r/g, '\n')
+        .split('\n\n')
+        .map(paragraph => {
+            if (paragraph.trim() === '') return '';
+            return `<p class="mb-4 text-gray-700 leading-relaxed">${paragraph.replace(/\n/g, '<br>')}</p>`;
+        })
+        .join('');
+    
+    // Format bullet points and lists
+    formatted = formatted.replace(/•\s*(.*?)(?=<br>|$)/g, '<li class="ml-4 mb-1">$1</li>');
+    formatted = formatted.replace(/(<li.*?<\/li>)+/g, '<ul class="list-disc list-inside mb-4 space-y-1">$&</ul>');
+    
+    // Format checkmarks and x marks
+    formatted = formatted.replace(/✓\s*/g, '<span class="text-green-600 font-bold">✓</span> ');
+    formatted = formatted.replace(/✗\s*/g, '<span class="text-red-600 font-bold">✗</span> ');
+    
+    // Format headings (lines that end with colon and are short)
+    formatted = formatted.replace(/^([A-Z][^:<br>]{1,50}):<br>/gm, '<strong class="text-lg text-gray-900 block mt-4 mb-2">$1:</strong>');
+    
+    // Format examples section
+    formatted = formatted.replace(/EXAMPLES:/g, '<h4 class="font-bold text-gray-900 text-lg mt-6 mb-3 border-b pb-2">EXAMPLES</h4>');
+    
+    // Format mathematical expressions (simple handling)
+    formatted = formatted.replace(/(\d+)\s*×\s*10\^(\d+)/g, '$1 × 10<sup>$2</sup>');
+    
+    return formatted || '<p class="text-gray-500 italic">No content available</p>';
+}
+
+function getContentStats(content) {
+    if (!content) return 'No content';
+    const words = content.split(/\s+/).length;
+    const lines = content.split('\n').length;
+    return `${words} words • ${lines} lines`;
+}
+
+function showErrorModal(message) {
+    const modalHtml = `
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" id="material-modal">
+            <div class="bg-white rounded-2xl p-6 max-w-md w-full mx-4">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">Error</h3>
+                    <p class="text-gray-600 mb-6">${message}</p>
+                    <button onclick="closeModal()" 
+                            class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    const modal = document.getElementById('material-modal');
+    if (modal) {
+        modal.innerHTML = modalHtml;
+    }
+}
+
+function closeModal() {
+    const modal = document.getElementById('material-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', function(event) {
+    const modal = document.getElementById('material-modal');
+    if (modal && event.target === modal) {
+        closeModal();
+    }
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeModal();
+    }
+});
+
+// FAQ Management
+function setupFAQSearch() {
+    const searchInput = document.getElementById('faq-search');
+    const subjectFilter = document.getElementById('faq-subject-filter');
+    
+    // Check if elements exist
+    if (!searchInput || !subjectFilter) {
+        return;
+    }
+    
+    let searchTimeout;
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            filterFAQs();
+        }, 300);
+    });
+    
+    subjectFilter.addEventListener('change', filterFAQs);
+}
+
+function filterFAQs() {
+    const searchInput = document.getElementById('faq-search');
+    const subjectFilter = document.getElementById('faq-subject-filter');
+    
+    if (!searchInput || !subjectFilter) {
+        return;
+    }
+    
+    const searchTerm = searchInput.value.toLowerCase();
+    const subjectValue = subjectFilter.value;
+    
+    filteredFAQs = allFAQs.filter(faq => {
+        const matchesSearch = !searchTerm || 
+            faq.question.toLowerCase().includes(searchTerm) ||
+            (faq.answer && faq.answer.toLowerCase().includes(searchTerm));
+        
+        const matchesSubject = !subjectValue || faq.subject === subjectValue;
+        
+        return matchesSearch && matchesSubject;
+    });
+    
+    displayFilteredFAQs();
+}
+
+function displayFilteredFAQs() {
+    const faqContainer = document.getElementById('faq-container');
+    const loadMoreButton = document.getElementById('load-more-faqs');
+    
+    if (!faqContainer) return;
+    
+    if (filteredFAQs.length === 0) {
+        faqContainer.innerHTML = `
+            <div class="col-span-2 text-center py-8">
+                <i class="fas fa-search text-4xl text-gray-400 mb-3"></i>
+                <p class="text-gray-600">No FAQs match your search criteria.</p>
+                <p class="text-gray-500 text-sm mt-2">Try adjusting your search terms or filters.</p>
+                <button onclick="clearFAQFilters()" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm">
+                    <i class="fas fa-times mr-2"></i>Clear Filters
+                </button>
+            </div>
+        `;
+        if (loadMoreButton) loadMoreButton.classList.add('hidden');
+        return;
+    }
+    
+    faqContainer.innerHTML = '';
+    filteredFAQs.forEach(faq => {
+        const faqElement = createFAQElement(faq);
+        faqContainer.appendChild(faqElement);
+    });
+    
+    if (loadMoreButton) loadMoreButton.classList.add('hidden');
+}
+
+function clearFAQFilters() {
+    const searchInput = document.getElementById('faq-search');
+    const subjectFilter = document.getElementById('faq-subject-filter');
+    
+    if (searchInput) searchInput.value = '';
+    if (subjectFilter) subjectFilter.value = '';
+    
+    filteredFAQs = [...allFAQs];
+    displayFilteredFAQs();
+}
+
+// In your dashboard template's JavaScript section
+async function loadFAQs(page = 1) {
+    const faqContainer = document.getElementById('faq-container');
+    const loadMoreButton = document.getElementById('load-more-faqs');
+    const subjectFilter = document.getElementById('faq-subject-filter');
+    
+    if (!faqContainer) {
+        console.log('FAQ container not found on this page');
+        return;
+    }
+    
+    try {
+        if (page === 1) {
+            faqContainer.innerHTML = `
+                <div class="col-span-2 text-center py-8">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p class="text-gray-600">Loading FAQs...</p>
+                </div>
+            `;
+        }
+
+        // Build query parameters
+        const params = new URLSearchParams({
+            page: page,
+            limit: itemsPerPage
+        });
+        
+        const searchQuery = document.getElementById('faq-search')?.value;
+        const subjectQuery = subjectFilter?.value;
+        
+        if (searchQuery) params.append('search', searchQuery);
+        if (subjectQuery) params.append('subject', subjectQuery);
+
+        const response = await fetch(`/api/faqs/?${params.toString()}`, {
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            credentials: 'same-origin'
+        });
+        
+        if (response.status === 403) {
+            throw new Error('Access denied. Please make sure you are logged in as a student.');
+        }
+        
+        if (response.status === 404) {
+            throw new Error('Student profile not found. Please contact administrator.');
+        }
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `Failed to load FAQs: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Debug: Log received data
+        console.log('FAQs loaded:', data.faqs);
+        console.log('Available subjects:', data.available_subjects);
+        
+        if (page === 1) {
+            faqContainer.innerHTML = '';
+            allFAQs = [];
+            
+            // Update subject filter options if needed
+            if (data.available_subjects && subjectFilter) {
+                updateSubjectFilter(subjectFilter, data.available_subjects);
+            }
+        }
+        
+        if (data.faqs && data.faqs.length > 0) {
+            allFAQs.push(...data.faqs);
+            filteredFAQs = [...allFAQs];
+            displayFilteredFAQs();
+            
+            if (data.has_more && loadMoreButton) {
+                loadMoreButton.classList.remove('hidden');
+                currentFAQPage = page;
+            } else if (loadMoreButton) {
+                loadMoreButton.classList.add('hidden');
+            }
+            
+            // Show subject distribution
+            showFAQStats(data.faqs);
+        } else {
+            if (page === 1) {
+                faqContainer.innerHTML = `
+                    <div class="col-span-2 text-center py-8">
+                        <i class="fas fa-inbox text-4xl text-gray-400 mb-3"></i>
+                        <p class="text-gray-600">No FAQs available yet.</p>
+                        <p class="text-gray-500 text-sm mt-2">Your teachers will add FAQs soon!</p>
+                        ${data.available_subjects && data.available_subjects.length > 0 ? 
+                            `<p class="text-gray-500 text-sm mt-1">Your subjects: ${data.available_subjects.join(', ')}</p>` : ''}
+                        <button onclick="loadFAQs(1)" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm">
+                            <i class="fas fa-sync-alt mr-2"></i>Refresh
+                        </button>
+                    </div>
+                `;
+            } else if (loadMoreButton) {
+                loadMoreButton.classList.add('hidden');
+            }
+        }
+    } catch (error) {
+        console.error('Error loading FAQs:', error);
+        if (faqContainer) {
+            faqContainer.innerHTML = `
+                <div class="col-span-2 text-center py-8">
+                    <i class="fas fa-exclamation-triangle text-4xl text-red-400 mb-3"></i>
+                    <p class="text-red-600 font-semibold mb-2">Failed to load FAQs</p>
+                    <p class="text-gray-600 text-sm mb-4">${error.message}</p>
+                    <button onclick="loadFAQs(1)" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm">
+                        <i class="fas fa-redo mr-2"></i>Try Again
+                    </button>
+                </div>
+            `;
+        }
+    }
+}
+
+function updateSubjectFilter(subjectFilter, availableSubjects) {
+    // Clear existing options except "All Subjects"
+    while (subjectFilter.options.length > 1) {
+        subjectFilter.remove(1);
+    }
+    
+    // Add available subjects
+    availableSubjects.forEach(subject => {
+        const option = document.createElement('option');
+        option.value = subject;
+        option.textContent = subject;
+        subjectFilter.appendChild(option);
+    });
+}
+
+function showFAQStats(faqs) {
+    // Count FAQs by subject for debugging
+    const subjectCounts = {};
+    faqs.forEach(faq => {
+        subjectCounts[faq.subject] = (subjectCounts[faq.subject] || 0) + 1;
+    });
+    console.log('FAQ distribution by subject:', subjectCounts);
+}
+
+function loadMoreFAQs() {
+    loadFAQs(currentFAQPage + 1);
+}
+
+function createFAQElement(faq) {
+    const faqDiv = document.createElement('div');
+    faqDiv.className = 'bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow cursor-pointer';
+    faqDiv.onclick = () => useFAQQuestion(faq.question);
+    
+    const truncatedAnswer = faq.answer && faq.answer.length > 150 ? 
+        faq.answer.substring(0, 150) + '...' : (faq.answer || 'No answer available');
+    
+    // Escape special characters
+    const safeQuestion = faq.question.replace(/'/g, "\\'");
+    const safeTeacher = (faq.teacher || 'Unknown').replace(/'/g, "\\'");
+    
+    faqDiv.innerHTML = `
+        <div class="flex items-start space-x-3">
+            <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                <i class="fas fa-question text-white text-sm"></i>
+            </div>
+            <div class="flex-1">
+                <h4 class="font-semibold text-gray-800 mb-2 text-sm leading-tight">${faq.question}</h4>
+                <p class="text-gray-600 text-sm mb-2">${truncatedAnswer}</p>
+                <div class="flex justify-between items-center mt-3">
+                    <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                        ${faq.subject}
+                    </span>
+                    <div class="text-xs text-gray-500">
+                        <i class="fas fa-user mr-1"></i>${faq.teacher || 'Unknown'}
+                    </div>
+                </div>
+                <div class="text-right mt-2">
+                    <span class="text-blue-600 hover:text-blue-800 text-xs font-medium flex items-center justify-end">
+                        <i class="fas fa-paper-plane mr-1"></i>
+                        Ask this question
+                    </span>
+                </div>
+            </div>
+        </div>
+    `;
+    return faqDiv;
+}
+
+function useFAQQuestion(question) {
+    setExample(question);
+    scrollToChat();
+}
+
+function loadChatHistory(question) {
+    setExample(question);
+    scrollToChat();
+}
+
+// Chat Functions with safety checks
+function setExample(question) {
+    const input = document.getElementById('user-input');
+    if (input) {
+        input.value = question;
+        input.focus();
+    }
+}
+
+function handleKeyPress(e) {
+    if (e.key === 'Enter') {
+        sendMessage();
+    }
+}
+
+function formatMessage(text) {
+    if (!text) return '';
+    text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    text = text.replace(/•\s*(.*?)(?=\n|$)/g, '<li>$1</li>');
+    text = text.replace(/\n/g, '<br>');
+    if (text.includes('<li>')) {
+        text = text.replace(/(<li>.*<\/li>)/g, '<ul class="list-disc list-inside space-y-1 my-2">$1</ul>');
+    }
+    return text;
+}
+
+function typeMessage(element, text, speed = 20) {
+    return new Promise((resolve) => {
+        let i = 0;
+        element.innerHTML = '';
+        function typeChar() {
+            if (i < text.length) {
+                const currentText = element.innerHTML;
+                const nextChar = text.charAt(i);
+                if (nextChar === '<') {
+                    const tagEnd = text.indexOf('>', i);
+                    if (tagEnd !== -1) {
+                        const fullTag = text.substring(i, tagEnd + 1);
+                        element.innerHTML += fullTag;
+                        i = tagEnd + 1;
+                    } else {
+                        element.innerHTML += nextChar;
+                        i++;
+                    }
+                } else {
+                    element.innerHTML += nextChar;
+                    i++;
+                }
+                element.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                setTimeout(typeChar, speed);
+            } else {
+                resolve();
+            }
+        }
+        typeChar();
+    });
+}
+
+async function sendMessage() {
+    const input = document.getElementById('user-input');
+    const sendButton = document.getElementById('send-button');
+    const chatMessages = document.getElementById('chat-messages');
+    
+    if (!input || !sendButton || !chatMessages) {
+        return;
+    }
+    
+    const message = input.value.trim();
+    if (!message) return;
+    
+    const responseInfo = document.getElementById('response-info');
+    const subjectInfo = document.getElementById('subject-info');
+    const confidenceInfo = document.getElementById('confidence-info');
+    
+    // Add user message
+    chatMessages.innerHTML += `
+        <div class="flex justify-end mb-4">
+            <div class="flex items-start space-x-3 max-w-xs md:max-w-2xl flex-row-reverse">
+                <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-user text-white text-sm"></i>
+                </div>
+                <div class="bg-blue-500 text-white rounded-2xl rounded-br-none p-4 shadow-sm max-w-full">
+                    <p class="break-words">${message}</p>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    input.value = '';
+    sendButton.disabled = true;
+    sendButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Sending...';
+    if (responseInfo) responseInfo.classList.add('hidden');
+    
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    const aiMessageId = 'ai-message-' + Date.now();
+    chatMessages.innerHTML += `
+        <div class="flex justify-start mb-4">
+            <div class="flex items-start space-x-3 max-w-xs md:max-w-2xl">
+                <div class="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-robot text-white text-sm"></i>
+                </div>
+                <div class="bg-white border border-gray-200 rounded-2xl rounded-tl-none p-4 shadow-sm w-full">
+                    <div id="${aiMessageId}" class="text-gray-800 min-h-6">
+                        <div class="flex items-center space-x-2 text-gray-500">
+                            <div class="typing-dots">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                            <span class="text-sm">AI is thinking...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    try {
+        const response = await fetch('/api/chat/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ question: message }),
+            credentials: 'same-origin'
+        });
+        
+        if (response.status === 403) {
+            throw new Error('Access denied. Please make sure you are logged in as a student.');
+        }
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `Request failed with status ${response.status}`);
+        }
+        
+        const data = await response.json();
+        const aiMessageElement = document.getElementById(aiMessageId);
+        if (aiMessageElement) {
+            aiMessageElement.innerHTML = '';
+            
+            if (data.answer) {
+                const formattedAnswer = formatMessage(data.answer);
+                await typeMessage(aiMessageElement, formattedAnswer, 10);
+                
+                if (data.subject && data.confidence && subjectInfo && confidenceInfo && responseInfo) {
+                    subjectInfo.textContent = `Subject: ${data.subject}`;
+                    confidenceInfo.textContent = `Confidence: ${(data.confidence * 100).toFixed(1)}%`;
+                    responseInfo.classList.remove('hidden');
+                }
+            } else if (data.error) {
+                aiMessageElement.innerHTML = `
+                    <div class="text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        <strong>Error:</strong> ${data.error}
+                    </div>
+                `;
+            }
+        }
+    } catch (error) {
+        const aiMessageElement = document.getElementById(aiMessageId);
+        if (aiMessageElement) {
+            aiMessageElement.innerHTML = `
+                <div class="text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    <strong>Error:</strong> ${error.message}
+                </div>
+            `;
+        }
+    } finally {
+        sendButton.disabled = false;
+        sendButton.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Send';
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+}
+
+// Auto-focus on input if it exists
+const userInput = document.getElementById('user-input');
+if (userInput) {
+    userInput.focus();
+}
+</script>
+
+<style>
+/* All your existing CSS styles remain the same */
+.typing-dots {
+    display: inline-flex;
+    align-items: center;
+    height: 20px;
+}
+
+.typing-dots span {
+    height: 8px;
+    width: 8px;
+    background-color: #9CA3AF;
+    border-radius: 50%;
+    display: inline-block;
+    margin: 0 1px;
+    animation: typing-dots 1.4s infinite ease-in-out both;
+}
+
+.typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+.typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes typing-dots {
+    0%, 80%, 100% { 
+        transform: scale(0.8);
+        opacity: 0.5;
+    }
+    40% { 
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+#chat-messages {
+    scroll-behavior: smooth;
+}
+
+#chat-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+#chat-messages::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+#chat-messages::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+#chat-messages::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+.bg-white.border {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.bg-blue-500 {
+    box-shadow: 0 1px 3px rgba(59, 130, 246, 0.3);
+}
+
+.bg-white.border:hover {
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
+}
+
+/* FAQ and Materials item hover effects */
+#faq-container > div,
+#materials-container > div {
+    transition: all 0.3s ease;
+}
+
+#faq-container > div:hover,
+#materials-container > div:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .max-w-xs {
+        max-width: 280px !important;
+    }
+    
+    .max-w-2xl {
+        max-width: 100% !important;
+    }
+    
+    .grid.md\:grid-cols-2 {
+        grid-template-columns: 1fr;
+    }
+    
+    .grid.lg\:grid-cols-3 {
+        grid-template-columns: 1fr;
+    }
+    
+    .flex-col.md\:flex-row {
+        flex-direction: column;
+    }
+}
+
+/* Loading animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+#faq-container > div,
+#materials-container > div {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Custom scrollbars */
+#faq-container,
+#materials-container {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+#faq-container::-webkit-scrollbar,
+#materials-container::-webkit-scrollbar {
+    width: 4px;
+}
+
+#faq-container::-webkit-scrollbar-track,
+#materials-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 2px;
+}
+
+#faq-container::-webkit-scrollbar-thumb,
+#materials-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 2px;
+}
+
+/* Material specific styles */
+.material-card {
+    transition: all 0.3s ease;
+}
+
+.material-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Modal and content styles */
+.prose {
+    line-height: 1.6;
+}
+
+.prose p {
+    margin-bottom: 1rem;
+}
+
+.prose ul {
+    margin-bottom: 1rem;
+}
+
+.prose li {
+    margin-bottom: 0.25rem;
+}
+
+.prose strong {
+    color: #1f2937;
+    font-weight: 600;
+}
+
+.prose sup {
+    font-size: 0.75em;
+    vertical-align: super;
+}
+
+/* Custom scrollbar for content */
+.bg-gray-50::-webkit-scrollbar {
+    width: 6px;
+}
+
+.bg-gray-50::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.bg-gray-50::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.bg-gray-50::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Modal animations */
+#material-modal {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+</style>
+{% endblock %}

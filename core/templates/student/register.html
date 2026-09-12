@@ -1,0 +1,394 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Registration{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 py-8">
+    <div class="max-w-4xl mx-auto px-4">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <a href="{% url 'index' %}" class="inline-flex items-center text-purple-600 hover:text-purple-700 mb-6">
+                <i class="fas fa-arrow-left mr-2"></i> Back to Home
+            </a>
+            <h1 class="text-4xl font-bold text-gray-800 mb-4">Join EduBridge AI</h1>
+            <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+                Create your student account and start your AI-powered learning journey today!
+            </p>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-8">
+            <!-- Registration Form -->
+            <div class="bg-white rounded-2xl shadow-2xl p-8">
+                <div class="flex items-center mb-6">
+                    <div class="bg-green-100 p-3 rounded-full mr-4">
+                        <i class="fas fa-user-graduate text-2xl text-green-600"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-800">Student Registration</h2>
+                </div>
+
+                {% if messages %}
+                <div class="mb-6">
+                    {% for message in messages %}
+                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg" role="alert">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <form method="post" class="space-y-6">
+                    {% csrf_token %}
+                    
+                    <!-- User Account Information -->
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <h3 class="text-lg font-semibold text-blue-800 mb-4 flex items-center">
+                            <i class="fas fa-user-circle mr-2"></i> Account Information
+                        </h3>
+                        
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <!-- Username -->
+                            <div>
+                                <label for="id_username" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Username *
+                                </label>
+                                <input type="text" name="username" id="id_username" required
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                                       placeholder="Choose a username">
+                                {% if user_form.username.errors %}
+                                <p class="text-red-500 text-sm mt-1">{{ user_form.username.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- Email -->
+                            <div>
+                                <label for="id_email" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Email Address *
+                                </label>
+                                <input type="email" name="email" id="id_email" required
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                                       placeholder="your.email@example.com">
+                                {% if user_form.email.errors %}
+                                <p class="text-red-500 text-sm mt-1">{{ user_form.email.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="grid md:grid-cols-2 gap-4 mt-4">
+                            <!-- First Name -->
+                            <div>
+                                <label for="id_first_name" class="block text-sm font-medium text-gray-700 mb-2">
+                                    First Name *
+                                </label>
+                                <input type="text" name="first_name" id="id_first_name" required
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                                       placeholder="Enter your first name">
+                            </div>
+
+                            <!-- Last Name -->
+                            <div>
+                                <label for="id_last_name" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Last Name *
+                                </label>
+                                <input type="text" name="last_name" id="id_last_name" required
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                                       placeholder="Enter your last name">
+                            </div>
+                        </div>
+
+                        <!-- Password -->
+                        <div class="mt-4">
+                            <label for="id_password" class="block text-sm font-medium text-gray-700 mb-2">
+                                Password *
+                            </label>
+                            <input type="password" name="password" id="id_password" required
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                                   placeholder="Create a strong password">
+                            <p class="text-xs text-gray-500 mt-1">
+                                Must be at least 8 characters long
+                            </p>
+                        </div>
+
+                        <!-- Phone -->
+                        <div class="mt-4">
+                            <label for="id_phone" class="block text-sm font-medium text-gray-700 mb-2">
+                                Phone Number
+                            </label>
+                            <input type="tel" name="phone" id="id_phone"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                                   placeholder="+91 98765 43210">
+                        </div>
+                    </div>
+
+                    <!-- Student Profile Information -->
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <h3 class="text-lg font-semibold text-green-800 mb-4 flex items-center">
+                            <i class="fas fa-graduation-cap mr-2"></i> Student Information
+                        </h3>
+
+                        <!-- Roll Number -->
+                        <div class="mb-4">
+                            <label for="id_roll_number" class="block text-sm font-medium text-gray-700 mb-2">
+                                Roll Number *
+                            </label>
+                            <input type="text" name="roll_number" id="id_roll_number" required
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
+                                   placeholder="Enter your roll number">
+                            {% if student_form.roll_number.errors %}
+                            <p class="text-red-500 text-sm mt-1">{{ student_form.roll_number.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <!-- Class -->
+                            <div>
+                                <label for="id_class_enrolled" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Class *
+                                </label>
+                                <select name="class_enrolled" id="id_class_enrolled" required
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors">
+                                    <option value="">Select your class</option>
+                                    {% for class in student_form.class_enrolled.field.queryset %}
+                                    <option value="{{ class.id }}">{{ class.name }}{% if class.section %} - {{ class.section }}{% endif %}</option>
+                                    {% endfor %}
+                                </select>
+                                {% if student_form.class_enrolled.errors %}
+                                <p class="text-red-500 text-sm mt-1">{{ student_form.class_enrolled.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- Date of Birth -->
+                            <div>
+                                <label for="id_date_of_birth" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Date of Birth
+                                </label>
+                                <input type="date" name="date_of_birth" id="id_date_of_birth"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors">
+                            </div>
+                        </div>
+
+                        <!-- Parent Phone -->
+                        <div class="mt-4">
+                            <label for="id_parent_phone" class="block text-sm font-medium text-gray-700 mb-2">
+                                Parent's Phone Number
+                            </label>
+                            <input type="tel" name="parent_phone" id="id_parent_phone"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
+                                   placeholder="+91 98765 43210">
+                        </div>
+                    </div>
+
+                    <!-- Terms and Submit -->
+                    <div class="bg-purple-50 p-4 rounded-lg">
+                        <div class="flex items-start mb-4">
+                            <input type="checkbox" name="terms" id="id_terms" required
+                                   class="mt-1 mr-3 rounded focus:ring-purple-500 text-purple-600">
+                            <label for="id_terms" class="text-sm text-gray-700">
+                                I agree to the <a href="#" class="text-purple-600 hover:text-purple-700 font-semibold">Terms of Service</a> 
+                                and <a href="#" class="text-purple-600 hover:text-purple-700 font-semibold">Privacy Policy</a>. 
+                                I understand that my data will be used to provide personalized learning experiences.
+                            </label>
+                        </div>
+
+                        <button type="submit" 
+                                class="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-4 px-6 rounded-xl font-bold text-lg transition-all transform hover:scale-105 shadow-lg">
+                            <i class="fas fa-user-plus mr-2"></i> Create Student Account
+                        </button>
+                    </div>
+                </form>
+
+                <div class="text-center mt-6 pt-6 border-t border-gray-200">
+                    <p class="text-gray-600">
+                        Already have an account? 
+                        <a href="{% url 'login' %}" class="text-blue-600 hover:text-blue-700 font-semibold">
+                            Sign in here
+                        </a>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Benefits Sidebar -->
+            <div class="space-y-6">
+                <!-- Welcome Card -->
+                <div class="bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl p-6 text-white shadow-2xl">
+                    <h3 class="text-2xl font-bold mb-4">🎉 Welcome to EduBridge AI!</h3>
+                    <p class="text-purple-100 leading-relaxed">
+                        You're about to join a community of thousands of students who are transforming their 
+                        learning experience with AI-powered education.
+                    </p>
+                </div>
+
+                <!-- Benefits Card -->
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-star text-yellow-500 mr-2"></i> Why Join EduBridge AI?
+                    </h3>
+                    <ul class="space-y-3">
+                        <li class="flex items-start">
+                            <i class="fas fa-robot text-green-500 mt-1 mr-3"></i>
+                            <span class="text-gray-700">24/7 AI Tutor for instant doubt resolution</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-brain text-blue-500 mt-1 mr-3"></i>
+                            <span class="text-gray-700">Personalized learning paths based on your progress</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-chart-line text-purple-500 mt-1 mr-3"></i>
+                            <span class="text-gray-700">Detailed progress tracking and analytics</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-language text-orange-500 mt-1 mr-3"></i>
+                            <span class="text-gray-700">Multilingual support for better understanding</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-tasks text-red-500 mt-1 mr-3"></i>
+                            <span class="text-gray-700">Interactive quizzes and practice tests</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-award text-yellow-500 mt-1 mr-3"></i>
+                            <span class="text-gray-700">Achievement badges and learning milestones</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Support Card -->
+                <div class="bg-blue-50 rounded-2xl p-6 border border-blue-200">
+                    <h3 class="text-lg font-semibold text-blue-800 mb-3 flex items-center">
+                        <i class="fas fa-question-circle mr-2"></i> Need Help?
+                    </h3>
+                    <p class="text-blue-700 text-sm mb-3">
+                        If you encounter any issues during registration, please contact your school administrator or our support team.
+                    </p>
+                    <div class="text-sm text-blue-600">
+                        <p class="flex items-center mb-1">
+                            <i class="fas fa-envelope mr-2"></i> support@edubridgeai.com
+                        </p>
+                        <p class="flex items-center">
+                            <i class="fas fa-phone mr-2"></i> +91 98765 43210
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Security Card -->
+                <div class="bg-green-50 rounded-2xl p-6 border border-green-200">
+                    <h3 class="text-lg font-semibold text-green-800 mb-3 flex items-center">
+                        <i class="fas fa-shield-alt mr-2"></i> Your Privacy & Security
+                    </h3>
+                    <ul class="text-sm text-green-700 space-y-2">
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle mt-1 mr-2 text-green-500"></i>
+                            <span>Your data is encrypted and secure</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle mt-1 mr-2 text-green-500"></i>
+                            <span>We never share your personal information</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle mt-1 mr-2 text-green-500"></i>
+                            <span>All communications are protected</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for Form Enhancement -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Password strength indicator
+    const passwordInput = document.getElementById('id_password');
+    const passwordStrength = document.createElement('div');
+    passwordStrength.className = 'text-xs mt-1';
+    passwordInput.parentNode.appendChild(passwordStrength);
+
+    passwordInput.addEventListener('input', function() {
+        const password = this.value;
+        let strength = 0;
+        let message = '';
+        let color = 'text-red-500';
+
+        if (password.length >= 8) strength++;
+        if (password.match(/[a-z]/) && password.match(/[A-Z]/)) strength++;
+        if (password.match(/\d/)) strength++;
+        if (password.match(/[^a-zA-Z\d]/)) strength++;
+
+        switch(strength) {
+            case 0:
+            case 1:
+                message = 'Weak password';
+                color = 'text-red-500';
+                break;
+            case 2:
+                message = 'Moderate password';
+                color = 'text-yellow-500';
+                break;
+            case 3:
+                message = 'Good password';
+                color = 'text-blue-500';
+                break;
+            case 4:
+                message = 'Strong password';
+                color = 'text-green-500';
+                break;
+        }
+
+        passwordStrength.textContent = message;
+        passwordStrength.className = `text-xs mt-1 ${color}`;
+    });
+
+    // Form validation
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const terms = document.getElementById('id_terms');
+        if (!terms.checked) {
+            e.preventDefault();
+            alert('Please agree to the Terms of Service and Privacy Policy to continue.');
+            terms.focus();
+        }
+    });
+
+    // Auto-format phone numbers
+    function formatPhoneNumber(input) {
+        let value = input.value.replace(/\D/g, '');
+        if (value.length > 0) {
+            value = '+91 ' + value.substring(0, 5) + (value.length > 5 ? ' ' + value.substring(5, 10) : '');
+        }
+        input.value = value;
+    }
+
+    const phoneInputs = document.querySelectorAll('input[type="tel"]');
+    phoneInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            formatPhoneNumber(this);
+        });
+    });
+
+    // Add loading state to submit button
+    form.addEventListener('submit', function() {
+        const submitButton = this.querySelector('button[type="submit"]');
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Creating Account...';
+        submitButton.disabled = true;
+    });
+});
+</script>
+
+<style>
+    input, select {
+        transition: all 0.3s ease;
+    }
+    
+    input:focus, select:focus {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.15);
+    }
+    
+    .form-section {
+        transition: all 0.3s ease;
+    }
+    
+    .form-section:hover {
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}
